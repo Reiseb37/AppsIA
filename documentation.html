@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation Technique</title>
+    <!-- Chargement de Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7;
+        }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-3xl mx-auto bg-white p-8 rounded-xl shadow-xl">
+        <header class="mb-8">
+            <!-- Lien de retour vers l'index -->
+            <a href="index.html" class="inline-flex items-center text-blue-500 hover:text-blue-700 transition duration-150">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Retour à l'accueil
+            </a>
+            <h1 class="text-4xl font-bold text-gray-800 mt-4">Documentation Technique du Projet</h1>
+            <p class="text-gray-500 mt-2">Détails techniques, spécifications et guides d'installation.</p>
+        </header>
+
+        <section class="prose max-w-none">
+            <!-- Contenu spécifique de la page -->
+            <h2 class="text-2xl font-semibold mt-6 mb-3">Introduction</h2>
+            <p>Ce document fournit un aperçu complet de l'architecture et des composants de notre application.</p>
+
+            <h2 class="text-2xl font-semibold mt-6 mb-3">Installation</h2>
+            <p>Pour commencer, clonez le dépôt et exécutez les commandes suivantes dans votre terminal :</p>
+            <pre class="bg-gray-100 p-3 rounded-lg text-sm overflow-x-auto"><code>git clone https://www.collinsdictionary.com/dictionary/french-english/compte-de-d%C3%A9p%C3%B4t<br>cd [nom de votre dépôt]<br>npm install</code></pre>
+
+            <h2 class="text-2xl font-semibold mt-6 mb-3">Mise à Jour</h2>
+            <p>Veuillez consulter régulièrement cette page pour les dernières mises à jour.</p>
+        </section>
+
+    </div>
+</body>
+</html>
