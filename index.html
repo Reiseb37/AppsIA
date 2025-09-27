@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Index du Dépôt GitHub</title>
+    <!-- Chargement de Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Configuration de la police Inter (standard Tailwind) */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f7f7; /* Gris très clair pour le fond */
+        }
+        /* Style pour les cartes de lien */
+        .link-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            background-color: white;
+        }
+        .link-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-4xl w-full">
+        <!-- En-tête de la page -->
+        <header class="text-center mb-12">
+            <h1 class="text-5xl font-extrabold text-gray-800 mb-2">
+                Accueil du Dépôt
+            </h1>
+            <p class="text-xl text-gray-500">
+                Navigation rapide vers vos pages principales.
+            </p>
+        </header>
+
+        <!-- Grille des liens (entièrement réactive) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <!-- Carte de Lien Exemple 1 : Documentation -->
+            <a href="documentation.html" class="link-card p-6 rounded-xl shadow-lg hover:shadow-xl border border-gray-100 block">
+                <div class="flex items-center space-x-4">
+                    <!-- Icône de documentation (SVG inline de lucide-react) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500 w-8 h-8">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <line x1="10" y1="9" x2="8" y2="9"></line>
+                    </svg>
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-700">Documentation Technique</h2>
+                        <p class="text-sm text-gray-400 mt-1">
+                            Accédez aux guides, spécifications et manuels.
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Carte de Lien Exemple 2 : Projet Principal -->
+            <a href="projet-principal.html" class="link-card p-6 rounded-xl shadow-lg hover:shadow-xl border border-gray-100 block">
+                <div class="flex items-center space-x-4">
+                    <!-- Icône de projet (SVG inline) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-green-500 w-8 h-8">
+                        <path d="M12 2v10"></path>
+                        <path d="M18.4 13.6a10 10 0 1 1-12.8 0"></path>
+                        <path d="m14 19-2 2-2-2"></path>
+                    </svg>
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-700">Page du Projet XYZ</h2>
+                        <p class="text-sm text-gray-400 mt-1">
+                            État actuel, démos et informations clés du projet.
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Carte de Lien Exemple 3 : Blog/Articles -->
+            <a href="articles.html" class="link-card p-6 rounded-xl shadow-lg hover:shadow-xl border border-gray-100 block">
+                <div class="flex items-center space-x-4">
+                    <!-- Icône d'article (SVG inline) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-purple-500 w-8 h-8">
+                        <rect width="18" height="18" x="3" y="3" rx="2"></rect>
+                        <line x1="16" y1="8" x2="8" y2="8"></line>
+                        <line x1="16" y1="12" x2="8" y2="12"></line>
+                        <line x1="12" y1="16" x2="8" y2="16"></line>
+                    </svg>
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-700">Articles & Rapports</h2>
+                        <p class="text-sm text-gray-400 mt-1">
+                            Lisez les derniers articles ou rapports générés.
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Ajoutez d'autres liens ici en copiant une des sections <a> ci-dessus -->
+            <a href="planning.html" class="link-card p-6 rounded-xl shadow-lg hover:shadow-xl border border-gray-100 block">
+                <div class="flex items-center space-x-4">
+                    <!-- Icône de calendrier (SVG inline) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-red-500 w-8 h-8">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <path d="M8 14h.01"></path>
+                        <path d="M12 14h.01"></path>
+                        <path d="M16 14h.01"></path>
+                        <path d="M8 18h.01"></path>
+                        <path d="M12 18h.01"></path>
+                        <path d="M16 18h.01"></path>
+                    </svg>
+                    <div>
+                        <h2 class="text-xl font-semibold text-gray-700">Feuille de Route</h2>
+                        <p class="text-sm text-gray-400 mt-1">
+                            Consultez les objectifs et le planning à venir.
+                        </p>
+                    </div>
+                </div>
+            </a>
+
+        </div>
+
+        <!-- Pied de page simple -->
+        <footer class="mt-12 text-center text-gray-400 text-sm">
+            <p>Ce dépôt est hébergé sur GitHub Pages.</p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
