@@ -3,48 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index du Dépôt GitHub Simplifié</title>
+    <title>Index du Dépôt Pédagogique</title>
     <!-- Chargement de Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Configuration de la police Inter */
+        /* Configuration du Thème Sombre */
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f7f7f7;
+            /* Arrière-plan sombre : Dégradé du Noir bleuté au Bleu ardoise */
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #e2e8f0; /* Couleur de texte par défaut très claire */
         }
         /* Style pour les cartes de lien */
         .link-card {
-            transition: transform 0.2s, box-shadow 0.2s;
-            background-color: white;
+            transition: all 0.3s ease-in-out;
+            background-color: #1f2937; /* Fond des cartes un peu plus clair que le body */
+            /* Ombre initiale forte et sombre */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            border: 1px solid #374151; /* Bordure sombre */
         }
         .link-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 10px -3px rgba(0, 0, 0, 0.1), 0 3px 5px -2px rgba(0, 0, 0, 0.05);
-            border-color: #3b82f6; /* Bordure bleue au survol */
+            /* Soulèvement plus marqué et légère mise à l'échelle */
+            transform: translateY(-4px) scale(1.02);
+            /* Effet de "Glow" Indigo/Violet inspirant pour le design sombre */
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3), 0 0 0 3px rgba(99, 102, 241, 0.5); 
+            border-color: #6366f1; /* Bordure Indigo vif */
         }
+        /* Style spécifique pour le titre */
+        .header-title {
+            /* Dégradé Indigo/Violet pour un thème sombre */
+            background-image: linear-gradient(to right, #8b5cf6, #3b82f6); 
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 3rem;
+        }
+        /* Surcharge des couleurs de texte pour assurer le contraste dans la carte */
+        .card-title { color: #f3f4f6; }
+        .card-description { color: #9ca3af; }
+        .icon-color { color: #818cf8; /* Indigo/Bleu clair */ }
+
     </style>
 </head>
 <body class="min-h-screen flex items-start justify-center p-4 sm:p-8">
 
     <div class="max-w-4xl w-full">
         <!-- En-tête de la page -->
-        <header class="text-center mb-10 mt-4 sm:mt-8">
-            <h1 class="text-4xl font-extrabold text-gray-800 mb-2">
-                Index du Dépôt
+        <header class="text-center mb-12 mt-4 sm:mt-12">
+            <h1 class="header-title font-extrabold mb-2 leading-tight">
+                Hub Pédagogique 3ème
             </h1>
-            <p class="text-lg text-gray-500">
-                Cliquez sur un fichier pour y accéder.
+            <p class="text-xl text-gray-400 font-light">
+                Outils de génération pour la préparation de cours.
             </p>
         </header>
 
         <!-- Conteneur des liens qui sera rempli par JavaScript -->
-        <div id="links-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div id="links-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <!-- Les cartes de lien seront insérées ici -->
         </div>
 
         <!-- Pied de page simple -->
-        <footer class="mt-12 text-center text-gray-400 text-sm">
-            <p>Liste générée dynamiquement.</p>
+        <footer class="mt-16 text-center text-gray-600 text-sm">
+            <p>Liste générée dynamiquement. Design sombre activé.</p>
         </footer>
     </div>
 
@@ -55,9 +76,7 @@
         const pages = [
             // { file: 'nom_du_fichier.html', title: 'Titre affiché', description: 'Description rapide (optionnel)' }
             { file: 'dictation_generator.html', title: 'Dictées 3ème', description: 'Générer des dictées type brevet' },
-            { file: 'generateur_controle.html', title: 'dénérateur de controle 3ème', description: 'Contrôles de connaissances' },
-            // Exemple de lien supplémentaire :
-            //{ file: 'tutoriel-css.html', title: 'Tutoriel CSS', description: 'Exemples et démos de style.' },
+            { file: 'generateur_controle.html', title: 'Générateur de Contrôle 3ème', description: 'Contrôles de connaissances pour la classe' },
         ];
 
         // --------------------------------------------------------------------------------
@@ -69,18 +88,18 @@
         pages.forEach(page => {
             // Créer le HTML pour une carte de lien
             const cardHtml = `
-                <a href="${page.file}" class="link-card p-4 sm:p-6 rounded-xl border-2 border-gray-100 shadow-md hover:shadow-lg block">
-                    <div class="flex items-center space-x-4">
+                <a href="${page.file}" class="link-card p-4 sm:p-6 rounded-xl block">
+                    <div class="flex items-start space-x-4">
                         <!-- Icône de fichier (Utilisation d'un SVG de Lucide pour l'esthétique) -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-500 w-6 h-6 sm:w-8 sm:h-8">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-color w-6 h-6 sm:w-8 sm:h-8 flex-shrink-0 mt-0.5">
                             <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
                         </svg>
                         <div>
-                            <h2 class="text-lg sm:text-xl font-semibold text-gray-700">
+                            <h2 class="text-lg sm:text-xl font-bold card-title">
                                 ${page.title}
                             </h2>
-                            <p class="text-xs sm:text-sm text-gray-400 mt-1">
+                            <p class="text-xs sm:text-sm card-description mt-1">
                                 ${page.description || page.file}
                             </p>
                         </div>
