@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Dictées Niveau Brevet</title>
+    <!-- Chargement de Tailwind CSS pour un design moderne et responsive -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'background': '#1f2937', // Gris foncé/Bleu marine
+                        'card-bg': '#374151', // Gris moyen pour les cartes
+                        'text-light': '#f3f4f6', // Texte clair
+                        'primary': '#a78bfa', // Lavande clair pour le contraste
+                        'secondary': '#34d399', // Vert menthe pour le succès
+                        'accent': '#f97316', // Orange brûlé pour l'action/avertissement
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Roboto Mono', 'monospace'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #111827; /* Noir très sombre pour le fond */
+            font-family: 'Inter', sans-serif;
+            color: #f3f4f6;
+        }
+        .card {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5), 0 2px 4px -1px rgba(0, 0, 0, 0.4);
+            border-radius: 0.75rem;
+            background-color: #1f2937; /* Background des cartes */
+            border: 1px solid #374151;
+        }
+        
+        /* Styles des boutons */
+        .btn-primary {
+            background-color: #4f46e5;
+            transition: all 0.2s;
+            box-shadow: 0 2px #3730a3; /* Ombre intérieure pour l'effet 3D */
+            border-radius: 0.5rem;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca;
+            transform: translateY(-1px);
+            box-shadow: 0 4px #3730a3;
+        }
+        .btn-accent {
+            background-color: #f97316;
+            transition: all 0.2s;
+            box-shadow: 0 2px #c2410c;
+        }
+        .btn-accent:hover {
+            background-color: #ea580c;
+            transform: translateY(-1px);
+            box-shadow: 0 4px #c2410c;
+        }
+
+        /* Styles des champs de saisie */
+        .form-input {
+            background-color: #111827; /* Très sombre pour le champ */
+            color: #f3f4f6;
+            border: 1px solid #4b5563;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus {
+            border-color: #a78bfa;
+            box-shadow: 0 0 0 1px #a78bfa;
+        }
+        
+        /* Styles spécifiques pour les boîtes de résultats */
+        .dictation-display {
+            font-family: 'mono', monospace; /* Police mono pour le texte source */
+            background-color: #030712; /* Noir absolu pour la zone de dictée */
+            color: #d1d5db;
+            padding: 1rem;
+            border: 2px dashed #4b5563;
+            border-radius: 0.5rem;
+            font-size: 1.1rem;
+        }
+        
+        .correction-box-generated {
+            background-color: #1f2937;
+            border-left: 4px solid #34d399; /* Vert Menthe */
+        }
+        .correction-box-ia {
+            background-color: #1f2937;
+            border-left: 4px solid #f97316; /* Orange Brûlé */
+        }
+        
+        /* Styles des titres dans les boîtes de correction */
+        #correctionContent h3, #detailedAnalysis h3 { 
+            color: #34d399; 
+            font-size: 1.4rem; 
+            font-weight: 700; 
+            margin-top: 1.5rem; 
+            border-bottom: 1px solid #374151; 
+            padding-bottom: 0.5rem; 
+        }
+        #correctionContent h4, #detailedAnalysis h4 { 
+            color: #a78bfa; 
+            font-size: 1.1rem; 
+            font-weight: 600; 
+            margin-top: 1rem; 
+        }
+        #correctionContent ul, #detailedAnalysis ul { 
+            list-style: disc; 
+            margin-left: 1.5rem; 
+            padding-left: 0; 
+            color: #d1d5db;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="app" class="max-w-4xl mx-auto">
+        <header class="text-center mb-8 p-6 card">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-primary mb-2">
+                Outil de Révision - Dictée DNB 3ème
+            </h1>
+            <p class="text-gray-400">Générez et corrigez vos dictées avec intelligence et précision académique.</p>
+        </header>
+
+        <!-- Formulaire de génération -->
+        <div class="card p-6 mb-8">
+            <h2 class="text-2xl font-semibold text-text-light mb-4 border-b border-gray-600 pb-2">Paramètres de l'Exercice</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <!-- Thème -->
+                <div>
+                    <label for="themeInput" class="block text-sm font-medium text-gray-300 mb-1">Thème</label>
+                    <input type="text" id="themeInput" placeholder="Saisir un thème (facultatif)" class="w-full form-input">
+                </div>
+                
+                <!-- Temps de conjugaison -->
+                <div>
+                    <label for="tenseSelect" class="block text-sm font-medium text-gray-300 mb-1">Temps de conjugaison ciblé</label>
+                    <select id="tenseSelect" class="w-full form-input appearance-none">
+                        <option value="Aucun">Aucun (Varié)</option>
+                        <option value="Présent de l'indicatif">Présent de l'indicatif</option>
+                        <option value="Imparfait de l'indicatif">Imparfait de l'indicatif</option>
+                        <option value="Passé simple">Passé simple (Difficulté Brevet)</option>
+                        <option value="Futur simple">Futur simple</option>
+                        <option value="Conditionnel présent">Conditionnel présent</option>
+                        <option value="Subjonctif présent">Subjonctif présent (Haute difficulté)</option>
+                        <option value="Temps composés (Passé composé, Plus-que-parfait)">Temps composés (Accords du participe passé)</option>
+                    </select>
+                </div>
+
+                <!-- Longueur de la dictée -->
+                <div>
+                    <label for="lengthSelect" class="block text-sm font-medium text-gray-300 mb-1">Longueur</label>
+                    <select id="lengthSelect" class="w-full form-input appearance-none">
+                        <option value="brevet">Brevet (100% - Standard)</option>
+                        <option value="moyenne">Moyenne (75% - Entraînement)</option>
+                        <option value="rapide">Rapide (50% - Échauffement)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Bouton de génération -->
+            <button id="generateBtn" onclick="generateDictation()" class="w-full btn-primary text-text-light font-bold py-3 rounded-lg shadow-lg">
+                Générer la Dictée
+            </button>
+        </div>
+
+        <!-- Section du statut (chargement/erreurs) -->
+        <div id="statusMessage" class="hidden p-4 rounded-lg text-center font-medium transition-all duration-300" role="status"></div>
+
+        <!-- Section des Résultats de Génération -->
+        <div id="resultsContainer" class="hidden">
+            <h2 class="text-3xl font-bold text-primary mb-6 border-b border-gray-600 pb-2">1. Texte et Correction Officielle</h2>
+            
+            <!-- Dictée à lire -->
+            <div id="dictationArea" class="card p-6 mb-8">
+                <h3 class="text-xl font-semibold text-primary mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Texte de la Dictée (À lire)
+                </h3>
+                <div id="dictationText" class="dictation-display whitespace-pre-wrap"></div>
+            </div>
+
+            <!-- Correction et Barème générés -->
+            <div id="correctionArea" class="card p-6 correction-box-generated">
+                <h3 class="text-xl font-semibold text-secondary mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Correction Détaillée et Barème de Notation Brevet
+                </h3>
+                <div id="correctionContent" class="text-base text-gray-300 prose max-w-none"></div>
+            </div>
+        </div>
+        
+        <!-- Section de Correction par Image -->
+        <div id="imageCorrectionSection" class="card p-6 mt-8 hidden">
+            <h2 class="text-3xl font-bold text-accent mb-6 border-b border-gray-600 pb-2">2. Correction de votre copie (par IA)</h2>
+            <p class="text-gray-400 mb-4">Prenez une photo nette de votre dictée manuscrite pour une correction et une note automatique.</p>
+            
+            <input type="file" id="dictationImageInput" accept="image/*" class="mb-4 block w-full text-sm text-gray-300 border border-gray-600 rounded-lg cursor-pointer bg-card-bg focus:outline-none p-2 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-white">
+
+            <div id="imagePreviewContainer" class="mb-4 hidden">
+                <p class="text-sm font-medium mb-2 text-gray-400">Aperçu de la copie :</p>
+                <img id="imagePreview" class="max-w-full h-auto rounded-lg border border-gray-600 mx-auto" style="max-height: 250px; object-fit: contain;">
+            </div>
+            
+            <button id="correctBtn" onclick="correctDictationImage()" class="w-full btn-accent text-text-light font-bold py-3 rounded-lg shadow-lg disabled:opacity-50" disabled>
+                Lancer la Correction et la Notation
+            </button>
+            
+            <!-- Résultats de la correction -->
+            <div id="correctionResults" class="mt-6 hidden correction-box-ia p-4">
+                <h3 class="text-xl font-bold text-accent mb-2">Résultat et Note Finale</h3>
+                <p class="text-2xl font-extrabold text-secondary mb-4">Note Estimée : <span id="finalScore">-- / 20</span></p>
+                
+                <h4 class="text-lg font-semibold text-gray-300 border-t border-gray-600 pt-2 mt-4">Analyse Détaillée (Erreurs Identifiées)</h4>
+                <div id="detailedAnalysis" class="text-gray-300 prose max-w-none mt-2"></div>
+            </div>
+        </div>
+
+        <footer class="mt-8 text-center text-sm text-gray-500 border-t border-gray-700 pt-4">
+            Application Gemini - Outil d'aide à la révision académique.
+        </footer>
+    </div>
+
+    <script type="module">
+        // --- Imports Firebase (Boilerplate) ---
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, setLogLevel } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Variables globales (récupérées de l'environnement Canvas)
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const apiKey = ""; // La clé est injectée automatiquement par l'environnement
+        const API_URL_TEXT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+
+        let app;
+        let auth;
+        let db;
+        let userId = null;
+        let isAuthReady = false;
+        
+        // --- Variables de l'application pour le flux de correction ---
+        let currentDictationText = null; // Texte correct généré (pour la comparaison)
+        let currentBarème = null; // Barème généré (pour l'application de la note)
+
+        // Éléments du DOM
+        const statusMessage = document.getElementById('statusMessage');
+        const dictationTextEl = document.getElementById('dictationText');
+        const correctionContentEl = document.getElementById('correctionContent');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const generateBtn = document.getElementById('generateBtn');
+        const correctBtn = document.getElementById('correctBtn');
+        const imageCorrectionSection = document.getElementById('imageCorrectionSection');
+        const dictationImageInput = document.getElementById('dictationImageInput');
+
+        // --- Initialisation Firebase (Omis pour la clarté, mais le boilerplate est conservé) ---
+        if (firebaseConfig) {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                setLogLevel('Debug');
+                
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                    } else {
+                        try {
+                            if (initialAuthToken) {
+                                await signInWithCustomToken(auth, initialAuthToken);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                        } catch (error) {
+                            console.error("Erreur d'authentification Firebase:", error);
+                        }
+                    }
+                    isAuthReady = true;
+                });
+            } catch (e) {
+                console.error("Erreur lors de l'initialisation de Firebase:", e);
+            }
+        }
+        
+        // Fonction utilitaire pour afficher les messages de statut
+        function setStatus(message, type = 'info', isVisible = true) {
+            statusMessage.textContent = message;
+            statusMessage.className = `p-4 rounded-lg text-center font-medium transition-all duration-300 ${isVisible ? '' : 'hidden'}`;
+            
+            if (type === 'loading') {
+                statusMessage.classList.add('bg-blue-800', 'text-white', 'animate-pulse');
+                generateBtn.disabled = true;
+                correctBtn.disabled = true; // Désactiver les deux boutons
+                generateBtn.innerHTML = `
+                    <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Génération en cours...`;
+            } else {
+                statusMessage.classList.remove('bg-blue-800', 'text-white', 'animate-pulse');
+                
+                if (type === 'error') {
+                    statusMessage.classList.add('bg-red-800', 'text-white');
+                    generateBtn.disabled = false;
+                    correctBtn.disabled = (currentDictationText === null || dictationImageInput.files.length === 0);
+                    generateBtn.textContent = 'Générer la Dictée';
+                } else if (type === 'success') {
+                    statusMessage.classList.add('bg-secondary', 'text-gray-900');
+                    generateBtn.disabled = false;
+                    correctBtn.disabled = (currentDictationText === null || dictationImageInput.files.length === 0);
+                    generateBtn.textContent = 'Générer la Dictée';
+                } else {
+                    statusMessage.classList.add('bg-card-bg', 'text-gray-300');
+                    generateBtn.disabled = false;
+                    correctBtn.disabled = (currentDictationText === null || dictationImageInput.files.length === 0);
+                    generateBtn.textContent = 'Générer la Dictée';
+                }
+            }
+        }
+
+        // Fonction de conversion Markdown très basique pour l'affichage
+        function convertMarkdownToHtml(markdown) {
+            let html = markdown || '';
+            
+            // Remplacer les titres (ajusté pour la correction)
+            html = html.replace(/^### (.*$)/gim, '<h4 class="text-lg font-semibold mt-4 mb-2 text-primary">$1</h4>');
+            html = html.replace(/^## (.*$)/gim, '<h3 class="text-xl font-bold mt-6 mb-3 text-secondary border-b pb-1">$1</h3>');
+
+            // Remplacer les listes
+            html = html.replace(/^\* (.*$)/gim, '<li class="ml-5 list-disc text-sm">$1</li>');
+            html = html.replace(/^- (.*$)/gim, '<li class="ml-5 list-disc text-sm">$1</li>');
+            html = `<ul>${html}</ul>`;
+            html = html.replace(/<\/ul>\n<ul>/g, ''); 
+            html = html.replace(/<ul>\n/g, '<ul>').replace(/\n<\/ul>/g, '</ul>'); // Nettoyer les sauts de ligne autour des <ul>
+
+            // Remplacer le gras
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Remplacer les retours à la ligne par des paragraphes
+            html = html.split('\n').filter(p => p.trim() !== '').map(p => {
+                if (!p.startsWith('<h') && !p.startsWith('<ul') && !p.startsWith('<li') && !p.startsWith('</')) {
+                    return `<p class="mb-3">${p}</p>`;
+                }
+                return p;
+            }).join('');
+            
+            return html;
+        }
+
+
+        // --- LOGIQUE DE GÉNÉRATION (API 1) ---
+        window.generateDictation = async function() {
+            const theme = document.getElementById('themeInput').value.trim();
+            const tense = document.getElementById('tenseSelect').value;
+            const length = document.getElementById('lengthSelect').value; // NOUVEAU
+
+            if (tense === "Aucun" && theme === "" && length !== "brevet") {
+                setStatus("Veuillez choisir un thème, un temps de conjugaison, ou la longueur Brevet.", 'error', true);
+                return;
+            }
+
+            // Déterminer la longueur cible en signes (caractères)
+            let lengthInstruction = "";
+            if (length === "rapide") {
+                lengthInstruction = "environ 300 à 350 signes (caractères), soit environ 20-25 mots, pour un entraînement rapide.";
+            } else if (length === "moyenne") {
+                lengthInstruction = "environ 450 à 525 signes (caractères), soit environ 30-38 mots, pour une durée modérée.";
+            } else { // brevet
+                lengthInstruction = "environ 600 à 700 signes (caractères), soit environ 40-50 mots, comme une dictée de Brevet standard.";
+            }
+
+
+            setStatus("Préparation du sujet... (cela peut prendre quelques secondes)", 'loading');
+            resultsContainer.classList.add('hidden');
+            imageCorrectionSection.classList.add('hidden');
+
+            const systemPrompt = `
+                Vous êtes un professeur de français, examinateur du Diplôme National du Brevet (DNB).
+                Votre rôle est de générer une dictée de niveau 3ème (équivalent DNB), d'une longueur idéale de ${lengthInstruction}.
+                La dictée doit inclure des difficultés grammaticales et orthographiques complexes typiques de l'épreuve du Brevet.
+                
+                Vous devez OBLIGATOIREMENT répondre avec un objet JSON strict, sans aucun préambule ni explication.
+
+                Le JSON doit contenir les clés suivantes :
+                1. "dictationTitle": Le titre de l'extrait de dictée (String).
+                2. "dictationText": Le texte intégral de la dictée. Il doit être formaté pour la LECTURE (sans mise en page Markdown ni astérisques).
+                3. "correctionAndBarème": Un bloc de texte au format Markdown contenant la correction détaillée et le barème de notation.
+
+                Dans le bloc "correctionAndBarème":
+                - Incluez un sous-titre "Texte Corrigé Officiel" où les difficultés sont mises en évidence (ex: en **gras** ou _soulignées_ dans le texte).
+                - Incluez un sous-titre "Barème de Notation (Similaire DNB - sur 20 points)" avec la liste des types d'erreurs et la déduction de points associée (ex: -0,5 point, -1 point).
+            `;
+
+            let userQuery = `Génère une dictée de niveau Brevet sur le thème de "${theme || 'la littérature classique'}"`;
+            
+            if (tense && tense !== "Aucun") {
+                userQuery += ` et qui cible spécifiquement l'utilisation du temps de conjugaison : **${tense}** (au moins 3 verbes complexes).`;
+            } else {
+                userQuery += `. Ne ciblez pas de temps spécifique, utilisez une variété (Passé Simple ou Imparfait, par exemple).`;
+            }
+            userQuery += ` Respecte le format JSON strict.`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            dictationTitle: { type: "STRING" },
+                            dictationText: { type: "STRING" },
+                            correctionAndBarème: { type: "STRING" }
+                        },
+                        propertyOrdering: ["dictationTitle", "dictationText", "correctionAndBarème"]
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(API_URL_TEXT, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!jsonText) {
+                    setStatus("Erreur: La réponse de l'IA est vide ou mal formatée.", 'error', true);
+                    return;
+                }
+
+                const dictationData = JSON.parse(jsonText);
+                
+                // --- STOCKAGE DES DONNÉES CLÉS POUR LA CORRECTION PAR IMAGE ---
+                currentDictationText = dictationData.dictationText; 
+                currentBarème = dictationData.correctionAndBarème; 
+
+                // Affichage des résultats de génération
+                dictationTextEl.innerHTML = `<h3 class="text-xl font-bold text-gray-300 mb-2">${dictationData.dictationTitle}</h3><hr class="mb-4 border-gray-600">` 
+                                          + `<div class="dictation-display">${dictationData.dictationText.replace(/\n/g, '<br>')}</div>`;
+                
+                const correctionHtml = convertMarkdownToHtml(dictationData.correctionAndBarème);
+                correctionContentEl.innerHTML = correctionHtml;
+
+                setStatus("Dictée générée avec succès ! 📝 Faites la dictée, puis passez à l'étape 2.", 'success', true);
+                resultsContainer.classList.remove('hidden');
+                imageCorrectionSection.classList.remove('hidden');
+                document.getElementById('correctionResults').classList.add('hidden'); // Cacher l'ancien résultat de correction
+                
+                // Mettre à jour l'état du bouton de correction d'image
+                correctBtn.disabled = (dictationImageInput.files.length === 0);
+
+            } catch (error) {
+                console.error("Erreur lors de la génération de la dictée:", error);
+                setStatus(`Échec de la génération. Détails: ${error.message}.`, 'error', true);
+            }
+        }
+
+        // --- GESTION DE L'IMAGE ET DE LA CORRECTION (API 2 - VISION) ---
+        
+        // Gérer le changement de fichier pour l'aperçu et l'activation du bouton
+        dictationImageInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const preview = document.getElementById('imagePreview');
+            const previewContainer = document.getElementById('imagePreviewContainer');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    previewContainer.classList.remove('hidden');
+                    // Activer le bouton si la dictée a été générée ET qu'un fichier est présent
+                    correctBtn.disabled = (currentDictationText === null); 
+                };
+                reader.readAsDataURL(file);
+            } else {
+                preview.src = "";
+                previewContainer.classList.add('hidden');
+                correctBtn.disabled = true;
+            }
+        });
+
+
+        window.correctDictationImage = async function() {
+            if (!currentDictationText || !currentBarème) {
+                setStatus("Veuillez d'abord générer la dictée (étape 1).", 'error', true);
+                return;
+            }
+
+            const fileInput = document.getElementById('dictationImageInput');
+            if (fileInput.files.length === 0) {
+                setStatus("Veuillez sélectionner une image de votre copie (étape 2).", 'error', true);
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            // Lire le fichier en Base64
+            reader.onloadend = async function() {
+                const base64Data = reader.result.split(',')[1];
+                const mimeType = file.type;
+
+                setStatus("Analyse de la copie et notation IA en cours... (patientez, l'analyse d'image est plus longue)", 'loading');
+                document.getElementById('correctBtn').disabled = true;
+                document.getElementById('correctionResults').classList.add('hidden');
+
+                const correctionSystemPrompt = `
+                    Vous êtes un correcteur IA du Brevet (DNB) spécialisé en dictée. Votre tâche est d'analyser le texte manuscrit fourni dans l'image, de le comparer au texte correct fourni, d'identifier les erreurs et d'appliquer le barème pour calculer une note finale sur 20.
+                    
+                    Instructions Clés :
+                    1. Vous devez d'abord transcrire le texte de l'élève à partir de l'image.
+                    2. Comparez strictement cette transcription au TEXTE CORRECT fourni.
+                    3. Appliquez le BARÈME DE NOTATION fourni pour calculer la note finale sur 20.
+                    4. Répondez OBLIGATOIREMENT avec un objet JSON STRICT.
+
+                    Le JSON doit contenir les clés suivantes :
+                    1. "finalScore": La note finale calculée, formatée comme un nombre flottant (ex: 17.5).
+                    2. "studentTranscription": Le texte que vous avez transcrit à partir de l'image (String).
+                    3. "detailedCorrection": Une analyse détaillée en Markdown. Incluez le texte de l'élève **avec les erreurs mises en évidence en gras** et expliquez CLAIREMENT les erreurs (nature, ex: accord, conjugaison) et la déduction de points appliquée, en référence au barème.
+                `;
+
+                const correctionUserQuery = `
+                    Veuillez corriger la dictée présente dans l'image.
+                    ---
+                    TEXTE CORRECT DE LA DICTÉE :
+                    ${currentDictationText}
+                    ---
+                    BARÈME À APPLIQUER :
+                    ${currentBarème}
+                    ---
+                    Correction :
+                `;
+                
+                const payload = {
+                    contents: [
+                        {
+                            role: "user",
+                            parts: [
+                                { text: correctionUserQuery },
+                                {
+                                    inlineData: {
+                                        mimeType: mimeType,
+                                        data: base64Data
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    systemInstruction: { parts: [{ text: correctionSystemPrompt }] },
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                finalScore: { type: ["STRING", "NUMBER"] },
+                                studentTranscription: { type: "STRING" },
+                                detailedCorrection: { type: "STRING" }
+                            },
+                            propertyOrdering: ["finalScore", "studentTranscription", "detailedCorrection"]
+                        }
+                    }
+                };
+
+                try {
+                    const response = await fetch(API_URL_TEXT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Erreur API (Correction): ${response.status} ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (!jsonText) {
+                         setStatus("Erreur: La réponse de l'IA est vide ou mal formatée pour la correction.", 'error', true);
+                         correctBtn.disabled = false;
+                         return;
+                    }
+
+                    const correctionData = JSON.parse(jsonText);
+
+                    // Affichage des résultats de la correction
+                    document.getElementById('finalScore').textContent = `${parseFloat(correctionData.finalScore).toFixed(1)} / 20`;
+                    
+                    // Affichage de l'analyse détaillée
+                    const analysisHtml = convertMarkdownToHtml(correctionData.detailedCorrection);
+                    document.getElementById('detailedAnalysis').innerHTML = analysisHtml;
+
+                    document.getElementById('correctionResults').classList.remove('hidden');
+                    setStatus("Correction terminée ! Consultez votre note et l'analyse détaillée ci-dessous.", 'success', true);
+                    correctBtn.disabled = false;
+
+                } catch (error) {
+                    console.error("Erreur lors de la correction de l'image:", error);
+                    setStatus(`Échec de la correction. Détails: ${error.message}. Assurez-vous que l'image est nette et le texte lisible.`, 'error', true);
+                    correctBtn.disabled = false;
+                }
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+        window.onload = function() {
+            // Initialisation ici si nécessaire
+        };
+    </script>
+</body>
+</html>
