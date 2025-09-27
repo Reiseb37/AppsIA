@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Contrôle de Connaissances</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        .file-drop-area {
+            border: 2px dashed #e2e8f0; /* slate-200 */
+            transition: all 0.2s ease-in-out;
+        }
+        .file-drop-area.dragover {
+            border-color: #4f46e5; /* indigo-600 */
+            background-color: #f8fafc; /* slate-50 */
+        }
+        #spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #4f46e5;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Styles d'impression (toujours sur fond blanc) */
+        @media print {
+            body {
+                background: none !important;
+                color: #000 !important;
+            }
+            .no-print, .main-card {
+                box-shadow: none !important;
+            }
+            .no-print { display: none !important; }
+            .main-content-wrapper {
+                padding: 0 !important; margin: 0 !important;
+            }
+            #printable-content {
+                padding: 0 !important;
+            }
+            #quiz-title, #correction-section h2, .prose {
+                color: #000 !important;
+            }
+            body > *:not(#printable-wrapper) { display: none; }
+            #printable-wrapper, #printable-wrapper * { visibility: visible; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-500 to-purple-500 min-h-screen p-4 sm:p-6 md:p-8">
+
+    <div class="main-content-wrapper max-w-3xl mx-auto">
+        <header class="text-center mb-8">
+            <div class="inline-block bg-white/30 backdrop-blur-sm p-3 rounded-2xl mb-4">
+                <svg class="w-10 h-10 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                </svg>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-white text-shadow">Générateur de Contrôle</h1>
+            <p class="text-indigo-200 mt-2 text-lg">Apprends et teste tes connaissances simplement.</p>
+        </header>
+
+        <main class="main-card bg-white/90 backdrop-blur-sm p-6 sm:p-8 rounded-[2rem] shadow-2xl">
+            <!-- Étape 1: Chargement et Configuration -->
+            <div id="upload-section">
+                <div id="file-drop-area" class="file-drop-area relative rounded-2xl p-8 text-center cursor-pointer">
+                    <input type="file" id="file-input" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                    <div class="flex flex-col items-center justify-center space-y-2 pointer-events-none">
+                        <svg class="w-12 h-12 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" /></svg>
+                        <p class="font-semibold text-slate-600">Dépose tes photos de leçon ici</p>
+                        <p class="text-sm text-slate-500">ou clique pour les chercher</p>
+                    </div>
+                </div>
+                <div id="file-preview" class="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+                
+                <div class="mt-8">
+                    <label class="block text-lg font-semibold mb-3 text-slate-700">Choisis un niveau :</label>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="flex items-center p-4 bg-slate-50 border-2 border-slate-200 rounded-xl cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 transition-all">
+                            <input type="radio" name="difficulty" value="facile" class="h-5 w-5 text-indigo-600 border-slate-300 focus:ring-indigo-500" checked><span class="ml-3"><strong class="block text-slate-800">Facile</strong></span></label>
+                        <label class="flex items-center p-4 bg-slate-50 border-2 border-slate-200 rounded-xl cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 transition-all">
+                            <input type="radio" name="difficulty" value="moyen" class="h-5 w-5 text-indigo-600 border-slate-300 focus:ring-indigo-500"><span class="ml-3"><strong class="block text-slate-800">Moyen</strong></span></label>
+                        <label class="flex items-center p-4 bg-slate-50 border-2 border-slate-200 rounded-xl cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 transition-all">
+                            <input type="radio" name="difficulty" value="complique" class="h-5 w-5 text-indigo-600 border-slate-300 focus:ring-indigo-500"><span class="ml-3"><strong class="block text-slate-800">Compliqué</strong></span></label>
+                        <label class="flex items-center p-4 bg-slate-50 border-2 border-slate-200 rounded-xl cursor-pointer has-[:checked]:border-indigo-500 has-[:checked]:bg-indigo-50 transition-all">
+                            <input type="radio" name="difficulty" value="brevet" class="h-5 w-5 text-indigo-600 border-slate-300 focus:ring-indigo-500"><span class="ml-3"><strong class="block text-slate-800">Type Brevet</strong></span></label>
+                    </div>
+                </div>
+
+                <div class="mt-8 text-center">
+                    <button id="generate-btn" class="w-full sm:w-auto bg-gradient-to-r from-green-400 to-cyan-500 text-white font-bold text-lg py-3 px-10 rounded-full hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-cyan-500 transition-all duration-150 transform hover:scale-105 shadow-md disabled:from-slate-400 disabled:to-slate-300 disabled:cursor-not-allowed disabled:scale-100 disabled:shadow-none">
+                        Créer mon contrôle
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Étape 2: Chargement -->
+            <div id="loading-section" class="hidden flex-col items-center justify-center text-center p-8"><div id="spinner"></div><p id="loading-message" class="mt-4 text-lg font-medium text-slate-600">Analyse en cours...</p><p class="text-slate-500">L'IA prépare tes questions.</p></div>
+
+            <!-- Étape 3: Résultats -->
+            <div id="results-section" class="hidden">
+                <div id="printable-wrapper">
+                    <div id="printable-content" class="bg-amber-50/50 p-6 rounded-2xl border-l-8 border-amber-300">
+                        <h2 id="quiz-title" class="text-2xl font-bold mb-6 text-slate-800">Votre Contrôle</h2>
+                        <div id="quiz-content" class="prose max-w-none prose-slate"></div>
+                    </div>
+                     <div id="correction-section" class="mt-6 bg-rose-50/50 p-6 rounded-2xl border-l-8 border-rose-300">
+                        <h2 class="text-2xl font-bold mb-6 text-rose-800">Correction</h2>
+                        <div id="correction-content" class="prose max-w-none"></div>
+                    </div>
+                </div>
+                
+                <div class="no-print mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                    <button id="print-btn" class="w-full sm:w-auto bg-slate-700 text-white font-bold py-2 px-6 rounded-full hover:bg-slate-600 shadow-md">🖨️ Imprimer / PDF</button>
+                    <button id="toggle-correction-btn" class="w-full sm:w-auto bg-slate-700 text-white font-bold py-2 px-6 rounded-full hover:bg-slate-600 shadow-md">🙈 Afficher la correction</button>
+                    <button id="restart-btn" class="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold py-2 px-6 rounded-full hover:shadow-md shadow-sm">🔄 Recommencer</button>
+                </div>
+            </div>
+            
+             <!-- Section Erreur -->
+            <div id="error-section" class="hidden mt-6 bg-rose-100 border-l-4 border-rose-500 text-rose-700 px-4 py-3 rounded-lg relative" role="alert"><strong class="font-bold">Oups ! </strong><span id="error-message"></span></div>
+        </main>
+    </div>
+
+    <script type="module">
+        // --- Le code JavaScript reste inchangé car il gère la logique ---
+        const MODEL_NAME = "gemini-2.5-flash-preview-05-20";
+        const API_KEY = "";
+
+        const uploadSection = document.getElementById('upload-section');
+        const loadingSection = document.getElementById('loading-section');
+        const resultsSection = document.getElementById('results-section');
+        const mainCard = document.querySelector('.main-card');
+        const errorSection = document.getElementById('error-section');
+        const errorMessage = document.getElementById('error-message');
+        const fileInput = document.getElementById('file-input');
+        const fileDropArea = document.getElementById('file-drop-area');
+        const filePreview = document.getElementById('file-preview');
+        const generateBtn = document.getElementById('generate-btn');
+        const printBtn = document.getElementById('print-btn');
+        const toggleCorrectionBtn = document.getElementById('toggle-correction-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        const quizTitle = document.getElementById('quiz-title');
+        const quizContent = document.getElementById('quiz-content');
+        const correctionSection = document.getElementById('correction-section');
+        const correctionContent = document.getElementById('correction-content');
+        const loadingMessage = document.getElementById('loading-message');
+
+        let uploadedFiles = [];
+
+        ['dragover', 'dragleave', 'drop'].forEach(eventName => fileDropArea.addEventListener(eventName, e => e.preventDefault()));
+        fileDropArea.addEventListener('dragover', () => fileDropArea.classList.add('dragover'));
+        fileDropArea.addEventListener('dragleave', () => fileDropArea.classList.remove('dragover'));
+        fileDropArea.addEventListener('drop', e => {
+            fileDropArea.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+        function handleFiles(files) {
+            for (const file of files) {
+                if (!file.type.startsWith('image/')) continue;
+                if (!uploadedFiles.some(f => f.name === file.name && f.size === file.size)) uploadedFiles.push(file);
+            }
+            updateFilePreview();
+            generateBtn.disabled = uploadedFiles.length === 0;
+        }
+
+        function updateFilePreview() {
+            filePreview.innerHTML = '';
+            uploadedFiles.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    filePreview.innerHTML += `
+                        <div class="relative group">
+                            <img src="${e.target.result}" alt="${file.name}" class="w-full h-24 object-cover rounded-md">
+                            <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-md">
+                                <button data-index="${index}" class="remove-file-btn text-white bg-red-600 rounded-full w-8 h-8 flex items-center justify-center text-xl leading-none">&times;</button>
+                            </div>
+                        </div>`;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        filePreview.addEventListener('click', e => {
+            if (e.target.matches('.remove-file-btn')) {
+                uploadedFiles.splice(parseInt(e.target.dataset.index), 1);
+                updateFilePreview();
+                generateBtn.disabled = uploadedFiles.length === 0;
+            }
+        });
+
+        printBtn.addEventListener('click', () => window.print());
+        generateBtn.addEventListener('click', generateQuiz);
+        toggleCorrectionBtn.addEventListener('click', toggleCorrection);
+        restartBtn.addEventListener('click', resetApp);
+        
+        async function generateQuiz() {
+            if (uploadedFiles.length === 0) return showError("Veuillez sélectionner au moins une image de votre leçon.");
+            
+            hideError();
+            uploadSection.classList.add('hidden');
+            mainCard.classList.remove('p-6', 'sm:p-8'); // Remove padding for loading view
+            loadingSection.classList.remove('hidden');
+            loadingSection.classList.add('flex');
+            
+            try {
+                loadingMessage.textContent = 'Analyse des images...';
+                const imageParts = await Promise.all(uploadedFiles.map(fileToGenerativePart));
+
+                const difficulty = document.querySelector('input[name="difficulty"]:checked').value;
+                const prompt = buildPrompt(difficulty);
+                
+                loadingMessage.textContent = 'Génération du contrôle...';
+                const payload = { contents: [{ role: "user", parts: [{ text: prompt }, ...imageParts] }] };
+                const response = await makeApiCallWithRetry(payload);
+                const resultText = response.candidates[0].content.parts[0].text;
+                
+                let quizData;
+                try {
+                    const cleanJsonString = resultText.replace(/^```json\n?/, '').replace(/\n?```$/, '');
+                    quizData = JSON.parse(cleanJsonString);
+                } catch (e) {
+                    throw new Error("L'IA a renvoyé une réponse dans un format inattendu. Veuillez réessayer.");
+                }
+
+                displayQuiz(quizData, difficulty);
+
+                loadingSection.classList.add('hidden');
+                resultsSection.classList.remove('hidden');
+                mainCard.classList.add('p-6', 'sm:p-8'); // Restore padding
+                correctionSection.classList.add('hidden', 'hidden-print');
+                toggleCorrectionBtn.textContent = '🙈 Afficher la correction';
+            } catch (error) {
+                showError(error.message || "Une erreur s'est produite lors de la génération du contrôle.");
+                resetToUploadView();
+            }
+        }
+        
+        async function makeApiCallWithRetry(payload, maxRetries = 3) {
+            for (let attempt = 0; attempt < maxRetries; attempt++) {
+                try {
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+                    const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) {
+                        const errorBody = await response.json();
+                        throw new Error(`Erreur API: ${response.status}. ${errorBody.error?.message || ''}`);
+                    }
+                    return await response.json();
+                } catch (error) {
+                    if (attempt >= maxRetries - 1) throw error;
+                    await new Promise(res => setTimeout(res, (attempt + 1) * 1500));
+                }
+            }
+        }
+
+        function buildPrompt(difficulty) {
+            const difficultyMap = {facile: "Facile (QCM simple)",moyen: "Moyen (QCM contextuel)",complique: "Compliqué (questions ouvertes)",brevet: "Type Brevet (élargissement du sujet)"};
+            return `En tant que professeur pour un élève de 3ème en France, analyse les images de la leçon. Crée un contrôle basé UNIQUEMENT sur ce contenu. Niveau : "${difficultyMap[difficulty]}". Ta réponse DOIT être un objet JSON valide, sans texte avant/après. Structure : {"titre": "...", "introduction": "...", "questions": [{"type": "qcm" | "ouvert", "question": "...", "options": ["A", "B"], "reponse": "...", "explication": "..."}]}. Crée 5-10 questions.`;
+        }
+
+        function displayQuiz(data, difficulty) {
+            quizTitle.textContent = data.titre || `Contrôle - Niveau ${difficulty}`;
+            quizContent.innerHTML = `<p class="mb-6">${data.introduction || ''}</p>` + data.questions.map((q, index) => {
+                let questionHtml = `<div class="mb-6"><p><strong>Question ${index + 1}:</strong> ${q.question}</p>`;
+                if (q.type === 'qcm' && q.options) {
+                    questionHtml += `<ul class="list-none pl-0 mt-2 space-y-2">` + q.options.map((opt, i) => `<li><span class="font-semibold mr-2">${String.fromCharCode(65 + i)}.</span> ${opt}</li>`).join('') + `</ul>`;
+                } else {
+                    questionHtml += `<div class="mt-4 border-b border-slate-300 h-16"></div>`;
+                }
+                return questionHtml + `</div>`;
+            }).join('');
+            
+            correctionContent.innerHTML = data.questions.map((q, index) => `<div class="mb-4"><p><strong>Question ${index + 1}:</strong> ${q.question}</p><p class="mt-1"><strong>Réponse :</strong> ${q.reponse}</p>${q.explication ? `<p class="mt-1 text-sm text-slate-600"><em>Explication : ${q.explication}</em></p>` : ''}</div>`).join('');
+        }
+
+        function toggleCorrection() {
+            const isHidden = correctionSection.classList.toggle('hidden');
+            correctionSection.classList.toggle('hidden-print');
+            toggleCorrectionBtn.textContent = isHidden ? '🙈 Afficher la correction' : '🙉 Masquer la correction';
+        }
+
+        function resetToUploadView() {
+            loadingSection.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            uploadSection.classList.remove('hidden');
+            mainCard.classList.add('p-6', 'sm:p-8');
+        }
+        
+        function resetApp() {
+            uploadedFiles = [];
+            updateFilePreview();
+            generateBtn.disabled = true;
+            resetToUploadView();
+            hideError();
+            correctionSection.classList.add('hidden', 'hidden-print');
+            toggleCorrectionBtn.textContent = '🙈 Afficher la correction';
+            fileInput.value = '';
+        }
+
+        async function fileToGenerativePart(file) {
+            const base64EncodedData = await new Promise(resolve => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.readAsDataURL(file);
+            });
+            return { inlineData: { data: base64EncodedData, mimeType: file.type } };
+        }
+        
+        function showError(message) { errorMessage.textContent = " " + message; errorSection.classList.remove('hidden'); }
+        function hideError() { errorSection.classList.add('hidden'); }
+    </script>
+</body>
+</html>
+
