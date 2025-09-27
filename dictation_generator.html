@@ -129,6 +129,13 @@
             <p class="text-gray-400">Générez et corrigez vos dictées avec intelligence et précision académique.</p>
         </header>
 
+        <!-- Configuration API Key -->
+        <div class="card p-6 mb-8 border-l-4 border-accent">
+            <h2 class="text-xl font-semibold text-accent mb-3">Configuration API</h2>
+            <p class="text-sm text-gray-400 mb-3">Veuillez insérer votre clé API Google AI Studio pour utiliser l'IA (nécessaire en ligne).</p>
+            <input type="password" id="apiKeyInput" placeholder="Clé API (commence par 'AIza...')" class="w-full form-input">
+        </div>
+
         <!-- Formulaire de génération -->
         <div class="card p-6 mb-8">
             <h2 class="text-2xl font-semibold text-text-light mb-4 border-b border-gray-600 pb-2">Paramètres de l'Exercice</h2>
@@ -239,8 +246,11 @@
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
         const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
-        const apiKey = ""; // La clé est injectée automatiquement par l'environnement
-        const API_URL_TEXT = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+        
+        // La clé API est maintenant récupérée du champ de saisie
+        let apiKey = ""; 
+        const GEMINI_MODEL = "gemini-2.5-flash-preview-05-20";
+
 
         let app;
         let auth;
@@ -253,6 +263,7 @@
         let currentBarème = null; // Barème généré (pour l'application de la note)
 
         // Éléments du DOM
+        const apiKeyInput = document.getElementById('apiKeyInput'); // NOUVEAU
         const statusMessage = document.getElementById('statusMessage');
         const dictationTextEl = document.getElementById('dictationText');
         const correctionContentEl = document.getElementById('correctionContent');
@@ -290,13 +301,30 @@
                 console.error("Erreur lors de l'initialisation de Firebase:", e);
             }
         }
+
+        // Vérifie si la clé API est présente
+        function checkApiKey() {
+            apiKey = apiKeyInput.value.trim();
+            if (!apiKey) {
+                setStatus("Veuillez saisir votre clé API pour commencer.", 'error', true);
+                generateBtn.disabled = true;
+                return false;
+            }
+            generateBtn.disabled = false;
+            return true;
+        }
+
+        // Écoute les changements dans le champ de la clé API
+        apiKeyInput.addEventListener('input', checkApiKey);
         
         // Fonction utilitaire pour afficher les messages de statut
         function setStatus(message, type = 'info', isVisible = true) {
             statusMessage.textContent = message;
             statusMessage.className = `p-4 rounded-lg text-center font-medium transition-all duration-300 ${isVisible ? '' : 'hidden'}`;
             
-            if (type === 'loading') {
+            const is_loading = type === 'loading';
+
+            if (is_loading) {
                 statusMessage.classList.add('bg-blue-800', 'text-white', 'animate-pulse');
                 generateBtn.disabled = true;
                 correctBtn.disabled = true; // Désactiver les deux boutons
@@ -311,20 +339,20 @@
                 
                 if (type === 'error') {
                     statusMessage.classList.add('bg-red-800', 'text-white');
-                    generateBtn.disabled = false;
-                    correctBtn.disabled = (currentDictationText === null || dictationImageInput.files.length === 0);
-                    generateBtn.textContent = 'Générer la Dictée';
                 } else if (type === 'success') {
                     statusMessage.classList.add('bg-secondary', 'text-gray-900');
-                    generateBtn.disabled = false;
-                    correctBtn.disabled = (currentDictationText === null || dictationImageInput.files.length === 0);
-                    generateBtn.textContent = 'Générer la Dictée';
                 } else {
                     statusMessage.classList.add('bg-card-bg', 'text-gray-300');
-                    generateBtn.disabled = false;
-                    correctBtn.disabled = (currentDictationText === null || dictationImageInput.files.length === 0);
-                    generateBtn.textContent = 'Générer la Dictée';
                 }
+                
+                // Réactiver les boutons si la clé est présente
+                generateBtn.disabled = !checkApiKey();
+                if (currentDictationText !== null && dictationImageInput.files.length > 0) {
+                     correctBtn.disabled = false;
+                } else {
+                     correctBtn.disabled = true;
+                }
+                generateBtn.textContent = 'Générer la Dictée';
             }
         }
 
@@ -339,15 +367,31 @@
             // Remplacer les listes
             html = html.replace(/^\* (.*$)/gim, '<li class="ml-5 list-disc text-sm">$1</li>');
             html = html.replace(/^- (.*$)/gim, '<li class="ml-5 list-disc text-sm">$1</li>');
-            html = `<ul>${html}</ul>`;
-            html = html.replace(/<\/ul>\n<ul>/g, ''); 
-            html = html.replace(/<ul>\n/g, '<ul>').replace(/\n<\/ul>/g, '</ul>'); // Nettoyer les sauts de ligne autour des <ul>
+            
+            // Ajouter des balises <ul> autour des listes
+            // Attention: cette conversion simple peut nécessiter un nettoyage si le markdown est très complexe
+            let ul_html = html.split('\n').map(line => {
+                if (line.trim().startsWith('<li')) {
+                    return line;
+                }
+                return `__PARA__${line}`;
+            }).join('\n');
+
+            ul_html = ul_html.replace(/__PARA__<li/g, '</ul>\n<ul><li');
+            ul_html = ul_html.replace(/<li__PARA__/g, '</li></ul>\n<ul>__PARA__');
+            ul_html = `<ul>${ul_html}</ul>`;
+            
+            // Nettoyage des balises <ul> vides ou mal placées
+            ul_html = ul_html.replace(/<ul>\s*<\/ul>/g, '');
+            ul_html = ul_html.replace(/__PARA__/g, '\n');
+            html = ul_html;
 
             // Remplacer le gras
             html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
             
             // Remplacer les retours à la ligne par des paragraphes
             html = html.split('\n').filter(p => p.trim() !== '').map(p => {
+                // Si la ligne ne commence pas par une balise HTML (titres, listes, etc.)
                 if (!p.startsWith('<h') && !p.startsWith('<ul') && !p.startsWith('<li') && !p.startsWith('</')) {
                     return `<p class="mb-3">${p}</p>`;
                 }
@@ -360,11 +404,13 @@
 
         // --- LOGIQUE DE GÉNÉRATION (API 1) ---
         window.generateDictation = async function() {
+            if (!checkApiKey()) return;
+
             const theme = document.getElementById('themeInput').value.trim();
             const tense = document.getElementById('tenseSelect').value;
-            const length = document.getElementById('lengthSelect').value; // NOUVEAU
+            const length = document.getElementById('lengthSelect').value; 
 
-            if (tense === "Aucun" && theme === "" && length !== "brevet") {
+            if (tense === "Aucun" && theme === "") {
                 setStatus("Veuillez choisir un thème, un temps de conjugaison, ou la longueur Brevet.", 'error', true);
                 return;
             }
@@ -383,6 +429,8 @@
             setStatus("Préparation du sujet... (cela peut prendre quelques secondes)", 'loading');
             resultsContainer.classList.add('hidden');
             imageCorrectionSection.classList.add('hidden');
+
+            const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
             const systemPrompt = `
                 Vous êtes un professeur de français, examinateur du Diplôme National du Brevet (DNB).
@@ -428,13 +476,17 @@
             };
 
             try {
-                const response = await fetch(API_URL_TEXT, {
+                const response = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
                 if (!response.ok) {
+                    // Si l'erreur est 403, on donne un message spécifique
+                    if (response.status === 403) {
+                         throw new Error(`Erreur 403: Clé API invalide ou accès non autorisé. Veuillez vérifier votre clé API.`);
+                    }
                     throw new Error(`Erreur API: ${response.status} ${response.statusText}`);
                 }
 
@@ -499,6 +551,7 @@
 
 
         window.correctDictationImage = async function() {
+            if (!checkApiKey()) return;
             if (!currentDictationText || !currentBarème) {
                 setStatus("Veuillez d'abord générer la dictée (étape 1).", 'error', true);
                 return;
@@ -521,6 +574,8 @@
                 setStatus("Analyse de la copie et notation IA en cours... (patientez, l'analyse d'image est plus longue)", 'loading');
                 document.getElementById('correctBtn').disabled = true;
                 document.getElementById('correctionResults').classList.add('hidden');
+
+                const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
 
                 const correctionSystemPrompt = `
                     Vous êtes un correcteur IA du Brevet (DNB) spécialisé en dictée. Votre tâche est d'analyser le texte manuscrit fourni dans l'image, de le comparer au texte correct fourni, d'identifier les erreurs et d'appliquer le barème pour calculer une note finale sur 20.
@@ -580,13 +635,17 @@
                 };
 
                 try {
-                    const response = await fetch(API_URL_TEXT, {
+                    const response = await fetch(API_URL, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
 
                     if (!response.ok) {
+                        // Si l'erreur est 403, on donne un message spécifique
+                        if (response.status === 403) {
+                             throw new Error(`Erreur 403: Clé API invalide ou accès non autorisé. Veuillez vérifier votre clé API.`);
+                        }
                         throw new Error(`Erreur API (Correction): ${response.status} ${response.statusText}`);
                     }
 
@@ -623,7 +682,8 @@
         }
 
         window.onload = function() {
-            // Initialisation ici si nécessaire
+            // Initialisation de la vérification de la clé API au chargement
+            checkApiKey();
         };
     </script>
 </body>
